@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import uuid
 from typing import TYPE_CHECKING, Any
 
@@ -12,6 +13,15 @@ if TYPE_CHECKING:
     from app.models.prediction import Prediction
     from app.models.pull_request import PullRequest
     from app.models.test_case import TestRecommendation
+
+
+class AnalysisStatus(enum.StrEnum):
+    QUEUED = "QUEUED"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    SUPERSEDED = "SUPERSEDED"
 
 
 class Analysis(Base, TimestampMixin):
