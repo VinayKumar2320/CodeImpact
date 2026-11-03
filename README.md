@@ -1,11 +1,15 @@
 # CodeImpact — Predictive Software Change Risk Analyzer
 
-[![CI](https://github.com/codeimpact/codeimpact/actions/workflows/ci.yml/badge.svg)](https://github.com/codeimpact/codeimpact/actions/workflows/ci.yml)
+[![CI](https://github.com/VinayKumar2320/CodeImpact/actions/workflows/ci.yml/badge.svg)](https://github.com/VinayKumar2320/CodeImpact/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-brightgreen?logo=github)](https://VinayKumar2320.github.io/CodeImpact/)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://react.dev)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+> **Live Public Demonstration**: [https://VinayKumar2320.github.io/CodeImpact/](https://VinayKumar2320.github.io/CodeImpact/)  
+> *Instant interactive exploration: view pull request risk scoring across all 4 risk tiers (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`), inspect Tree-sitter dependency graphs, examine TreeSHAP feature attributions, and run intelligent CI test selection with zero setup required.*
 
 **CodeImpact** is a developer tools and continuous integration platform that analyzes pull requests before merge. It reconstructs AST syntactical differences, calculates cyclomatic complexity deltas ($\Delta CC$), tracks code dependency graphs and network centrality, predicts post-merge regression risk using a calibrated supervised XGBoost model with TreeSHAP explainability, and selects a budgeted, high-value subset of tests to optimize CI turnaround.
 
