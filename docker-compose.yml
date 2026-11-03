@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: codeimpact_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-codeimpact}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codeimpact_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-codeimpact_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-codeimpact} -d ${POSTGRES_DB:-codeimpact_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: codeimpact_redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: codeimpact_backend
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-codeimpact}:${POSTGRES_PASSWORD:-codeimpact_dev_password}@postgres:5432/${POSTGRES_DB:-codeimpact_db}
+      - SYNC_DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-codeimpact}:${POSTGRES_PASSWORD:-codeimpact_dev_password}@postgres:5432/${POSTGRES_DB:-codeimpact_db}
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_HOST=redis
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-development_webhook_secret_key}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: worker.Dockerfile
+    container_name: codeimpact_worker
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-codeimpact}:${POSTGRES_PASSWORD:-codeimpact_dev_password}@postgres:5432/${POSTGRES_DB:-codeimpact_db}
+      - SYNC_DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-codeimpact}:${POSTGRES_PASSWORD:-codeimpact_dev_password}@postgres:5432/${POSTGRES_DB:-codeimpact_db}
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: codeimpact_frontend
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
