@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import uuid
 from typing import TYPE_CHECKING, Any
 
@@ -11,6 +12,13 @@ from app.core.database import Base, TimestampMixin
 if TYPE_CHECKING:
     from app.models.analysis import Analysis
     from app.models.model_version import ModelVersion
+
+
+class RiskTier(enum.StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
 
 
 class Prediction(Base, TimestampMixin):
