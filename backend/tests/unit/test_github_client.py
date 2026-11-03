@@ -92,7 +92,12 @@ async def test_github_client_files_pagination():
             return httpx.Response(
                 200,
                 json=[
-                    {"filename": "app/main.py", "status": "modified", "additions": 10, "deletions": 2},
+                    {
+                        "filename": "app/main.py",
+                        "status": "modified",
+                        "additions": 10,
+                        "deletions": 2,
+                    },
                     {"filename": "app/auth.py", "status": "added", "additions": 35, "deletions": 0},
                 ],
             )
@@ -100,7 +105,12 @@ async def test_github_client_files_pagination():
             return httpx.Response(
                 200,
                 json=[
-                    {"filename": "tests/test_auth.py", "status": "added", "additions": 25, "deletions": 0},
+                    {
+                        "filename": "tests/test_auth.py",
+                        "status": "added",
+                        "additions": 25,
+                        "deletions": 0,
+                    },
                 ],
             )
         else:

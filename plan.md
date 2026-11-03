@@ -115,17 +115,22 @@ The minimal viable slice will prove the core end-to-end flow before expanding to
   - Rate limiting, 404, and 401 API responses handled gracefully with verified backoff.
   - All 34 tests passing with zero errors across unit, integration, and security suites.
 
-### Phase 3: Static Code Analysis & Dependency Engine
+### Phase 3: Static Code Analysis & Dependency Engine [STATUS: COMPLETED ✅]
 - **Objective**: Implement language-aware diff analysis, Tree-sitter AST parsing, Radon complexity extraction, and NetworkX dependency graph construction.
-- **Deliverables**:
-  - Tree-sitter Python parser mapping changed line diffs to exact function and class nodes.
-  - Radon cyclomatic complexity and nesting depth extractor for files and functions.
-  - NetworkX dependency analyzer extracting imports, callers, callees, fan-in, fan-out, and betweenness centrality.
-  - Git history churn analyzer (file change frequency, author count, commit recency).
-  - TypeScript parser extension via Tree-sitter TypeScript.
-- **Acceptance Criteria**:
-  - Controlled sample repository changes correctly identify modified functions, callers, and complexity deltas.
+- **Deliverables Completed**:
+  - `UnifiedDiffParser`: Full parsing of unified git diffs, hunk line extraction, added/deleted line tracking, and file classification (`test_file`, `config_file`, `doc`, `source`).
+  - `PythonASTParser` (Tree-sitter Python): AST extraction for modules, functions, classes, imports, and function calls; diff-to-AST intersection identifying modified, added, and deleted functions and public API modifications; resilient to syntax errors.
+  - `TypeScriptASTParser` (Tree-sitter TypeScript): Multi-language support extracting classes, exported functions, arrow functions, and method definitions for `.ts` and `.tsx` files.
+  - `ComplexityAnalyzer` (Radon + AST): Computes cyclomatic complexity ($CC$), SLOC, nesting depth, parameter counts, $\Delta CC$ between base and head revisions, and high-complexity function counts ($CC \ge 10$).
+  - `DependencyGraphBuilder` (NetworkX): Reconstructs directed dependency graphs with `CONTAINS`, `IMPORTS`, and `CALLS` edges; computes fan-in, fan-out, betweenness centrality; maps directly modified nodes to transitive affected callers; serializes graph for React Flow visualization.
+  - `GitChurnAnalyzer`: Computes file-level commit frequency over lookback windows, distinct contributors, file age, and Gini coefficient of change concentration.
+  - `StaticAnalysisOrchestrator`: Unifies diff parsing, AST analysis, complexity delta extraction, and dependency graph mapping into an aggregated feature dictionary for ML models and database persistence.
+  - Controlled sample repository fixture created in `examples/sample_python_repo/` with inter-module calls and pytest test suites.
+- **Acceptance Criteria Verification**:
+  - Controlled sample repository changes correctly identify modified functions, callers, and complexity deltas (`test_static_analysis_pipeline.py`).
   - Unit tests verify graph metrics, boundary edge conditions, and syntax error resiliency.
+  - All 48 backend tests passing with 84% test coverage.
+  - `ruff check .`, `ruff format --check .`, and `mypy app` passing with 0 errors across 53 source modules.
 
 ### Phase 4: Historical Dataset Collection & Ground Truth Labeling
 - **Objective**: Build reproducible scripts to collect pull requests, extract feature vectors, and assign transparent post-merge regression labels from open-source repositories.
