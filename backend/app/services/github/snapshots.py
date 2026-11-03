@@ -35,14 +35,19 @@ class RepositorySnapshotService:
         Validate and sanitize relative file paths extracted from git diffs.
         Rejects directory traversal attempts, absolute paths, or null bytes.
         """
-        if not relative_path:
+        if not relative_path or not relative_path.strip():
             raise PathTraversalSecurityError("File path cannot be empty")
 
         if "\x00" in relative_path:
             raise PathTraversalSecurityError("Null bytes detected in path")
 
+        if "\\" in relative_path or ":" in relative_path:
+            raise PathTraversalSecurityError(
+                f"Backslash or drive path not permitted: {relative_path}"
+            )
+
         # Normalize path
-        normalized = os.path.normpath(relative_path)
+        normalized = os.path.normpath(relative_path.strip())
 
         if normalized.startswith("/") or normalized.startswith("\\"):
             raise PathTraversalSecurityError(f"Absolute paths not permitted: {relative_path}")
