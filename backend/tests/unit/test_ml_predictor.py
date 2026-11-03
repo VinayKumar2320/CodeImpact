@@ -5,7 +5,9 @@ from app.models.prediction import RiskTier
 
 
 def test_predictor_loads_trained_model():
-    model_path = Path(__file__).resolve().parents[2] / "app" / "ml" / "models_store" / "risk_model_v1.joblib"
+    model_path = (
+        Path(__file__).resolve().parents[2] / "app" / "ml" / "models_store" / "risk_model_v1.joblib"
+    )
     predictor = RiskPredictor(model_path=model_path if model_path.exists() else None)
 
     assert predictor.model_name in ("xgboost", "heuristic_fallback")

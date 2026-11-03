@@ -65,7 +65,9 @@ def generate_human_explanation(feature_name: str, val: float, score: float) -> s
 
     if feature_name == "change_size":
         if is_positive:
-            return f"Large pull request size ({int(val)} lines modified) increased risk by {sign_str}."
+            return (
+                f"Large pull request size ({int(val)} lines modified) increased risk by {sign_str}."
+            )
         return f"Compact pull request size ({int(val)} lines modified) reduced risk by {sign_str}."
 
     if feature_name in ("delta_average_complexity", "delta_max_complexity"):
@@ -85,8 +87,8 @@ def generate_human_explanation(feature_name: str, val: float, score: float) -> s
 
     if feature_name == "test_coverage_ratio":
         if is_positive:
-            return f"Low pre-merge test coverage ({val*100:.0f}%) increased regression likelihood by {sign_str}."
-        return f"High pre-merge test coverage ({val*100:.0f}%) effectively mitigated risk by {sign_str}."
+            return f"Low pre-merge test coverage ({val * 100:.0f}%) increased regression likelihood by {sign_str}."
+        return f"High pre-merge test coverage ({val * 100:.0f}%) effectively mitigated risk by {sign_str}."
 
     if feature_name == "mean_change_frequency":
         if is_positive:
@@ -123,7 +125,9 @@ class RiskPredictor:
             logger.info("Using calibrated heuristic fallback risk predictor")
             return False
 
-        default_store = Path(__file__).resolve().parent.parent / "models_store" / "risk_model_v1.joblib"
+        default_store = (
+            Path(__file__).resolve().parent.parent / "models_store" / "risk_model_v1.joblib"
+        )
         if default_store.exists():
             return self._load_from_file(default_store)
 
@@ -149,9 +153,7 @@ class RiskPredictor:
         feat_vector = feature_extractor.extract_from_dict(raw_features)
         X_sample = feat_vector.reshape(1, -1)
 
-        raw_feat_dict = {
-            name: float(feat_vector[i]) for i, name in enumerate(FEATURE_NAMES)
-        }
+        raw_feat_dict = {name: float(feat_vector[i]) for i, name in enumerate(FEATURE_NAMES)}
 
         # Predict probability
         if self.model is not None:
@@ -252,9 +254,7 @@ class RiskPredictor:
                     score = float(vals[i])
                     val = raw_features.get(name, 0.0)
                     if abs(score) > 0.005:  # filter noise
-                        direction = (
-                            "RISK_INCREASING" if score > 0 else "RISK_REDUCING"
-                        )
+                        direction = "RISK_INCREASING" if score > 0 else "RISK_REDUCING"
                         explanation = generate_human_explanation(name, val, score)
                         attributions.append(
                             FactorAttribution(

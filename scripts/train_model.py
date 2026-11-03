@@ -24,7 +24,9 @@ logger = get_logger("scripts.train_model")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train CodeImpact Risk Prediction Model")
+    parser = argparse.ArgumentParser(
+        description="Train CodeImpact Risk Prediction Model"
+    )
     parser.add_argument(
         "--data-dir",
         type=str,
@@ -53,14 +55,18 @@ def main() -> None:
     val_file = data_dir / "val.jsonl"
 
     if not train_file.exists() or not val_file.exists():
-        logger.error(f"Missing train or val dataset in {data_dir}. Run scripts/collect_dataset.py first.")
+        logger.error(
+            f"Missing train or val dataset in {data_dir}. Run scripts/collect_dataset.py first."
+        )
         sys.exit(1)
 
     logger.info(f"Loading datasets from {data_dir}...")
     train_records = DatasetLoader.load_jsonl(train_file)
     val_records = DatasetLoader.load_jsonl(val_file)
 
-    logger.info(f"Loaded {len(train_records)} train records, {len(val_records)} val records.")
+    logger.info(
+        f"Loaded {len(train_records)} train records, {len(val_records)} val records."
+    )
 
     # Validate leakage
     test_file = data_dir / "test.jsonl"
@@ -94,12 +100,16 @@ def main() -> None:
     logger.info(f"Saved model metadata to {meta_path}")
 
     print("\n" + "=" * 60)
-    print(f" MODEL TRAINING COMPLETE: {bundle['model_name'].upper()} v{bundle['version']}")
+    print(
+        f" MODEL TRAINING COMPLETE: {bundle['model_name'].upper()} v{bundle['version']}"
+    )
     print("=" * 60)
     print(f"Artifact location: {model_path}")
     print("\nComparative Validation Metrics:")
     for m_name, m_stats in bundle["comparison_metrics"].items():
-        print(f"  {m_name.ljust(25)}: PR-AUC={m_stats['pr_auc']:.4f} | ROC-AUC={m_stats['roc_auc']:.4f} | Brier={m_stats['brier_score']:.4f}")
+        print(
+            f"  {m_name.ljust(25)}: PR-AUC={m_stats['pr_auc']:.4f} | ROC-AUC={m_stats['roc_auc']:.4f} | Brier={m_stats['brier_score']:.4f}"
+        )
     print("=" * 60 + "\n")
 
 

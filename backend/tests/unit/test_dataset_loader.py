@@ -110,9 +110,7 @@ def test_validate_temporal_splits_detects_leakage(sample_records: list[Historica
     val = [r for r in sample_records if r.split == "val"]
     test = [r for r in sample_records if r.split == "test"]
 
-    leaked_record = train[0].model_copy(
-        update={"merged_at": val[0].merged_at + timedelta(days=1)}
-    )
+    leaked_record = train[0].model_copy(update={"merged_at": val[0].merged_at + timedelta(days=1)})
     leaked_train = [leaked_record] + train[1:]
 
     with pytest.raises(DataLeakageError) as exc_info:

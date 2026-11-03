@@ -1,0 +1,48 @@
+{
+  "budget_seconds": 30.0,
+  "total_suite_size": 150,
+  "total_suite_duration_sec": 113.43,
+  "ground_truth_failing_tests_count": 4,
+  "strategies": {
+    "full_suite": {
+      "name": "Full Test Suite",
+      "tests_selected": 150,
+      "duration_seconds": 113.43,
+      "time_savings_percent": 0.0,
+      "failing_tests_caught": 4,
+      "recall_percent": 100.0
+    },
+    "random_sampling": {
+      "name": "Random Selection (under budget)",
+      "tests_selected": 56,
+      "duration_seconds": 29.99,
+      "time_savings_percent": 73.56,
+      "failing_tests_caught": 0,
+      "recall_percent": 0.0
+    },
+    "filename_matching": {
+      "name": "Path Heuristic (under budget)",
+      "tests_selected": 24,
+      "duration_seconds": 29.89,
+      "time_savings_percent": 73.65,
+      "failing_tests_caught": 4,
+      "recall_percent": 100.0
+    },
+    "dependency_selection": {
+      "name": "Dependency-Only (under budget)",
+      "tests_selected": 12,
+      "duration_seconds": 15.97,
+      "time_savings_percent": 85.92,
+      "failing_tests_caught": 4,
+      "recall_percent": 100.0
+    },
+    "codeimpact_optimizer": {
+      "name": "CodeImpact Marginal Optimizer",
+      "tests_selected": 76,
+      "duration_seconds": 29.86,
+      "time_savings_percent": 73.67339921889464,
+      "failing_tests_caught": 4,
+      "recall_percent": 100.0
+    }
+  }
+}

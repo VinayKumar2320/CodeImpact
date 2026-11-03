@@ -85,7 +85,11 @@ def generate_pr_records(
         reg_prob = max(0.03, min(0.45, risk_factor))
         is_regression = 1 if random.random() < reg_prob else 0
 
-        tier = 1 if is_regression and random.random() < 0.4 else (2 if is_regression else 1)
+        tier = (
+            1
+            if is_regression and random.random() < 0.4
+            else (2 if is_regression else 1)
+        )
         provenance = (
             f"Explicit revert in commit {os.urandom(20).hex()}"
             if tier == 1 and is_regression
@@ -143,9 +147,15 @@ def generate_pr_records(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Collect and partition CodeImpact historical dataset")
-    parser.add_argument("--output-dir", default="datasets", help="Target output directory")
-    parser.add_argument("--samples-per-repo", type=int, default=300, help="Number of PRs per repo")
+    parser = argparse.ArgumentParser(
+        description="Collect and partition CodeImpact historical dataset"
+    )
+    parser.add_argument(
+        "--output-dir", default="datasets", help="Target output directory"
+    )
+    parser.add_argument(
+        "--samples-per-repo", type=int, default=300, help="Number of PRs per repo"
+    )
     args = parser.parse_args()
 
     out_dir = Path(args.output_dir)
@@ -224,9 +234,15 @@ def main():
     with open(out_dir / "manifest.json", "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
 
-    print(f"Generated {len(all_records)} records across {len(REPOSITORIES)} repositories.")
-    print(f"  Train: {len(train_records)} | Val: {len(val_records)} | Test: {len(test_records)} | Cross-Repo: {len(cross_repo_records)}")
-    print(f"  Class balance: {pos_count} regressions ({manifest['imbalance_ratio']*100:.1f}%), {neg_count} stable.")
+    print(
+        f"Generated {len(all_records)} records across {len(REPOSITORIES)} repositories."
+    )
+    print(
+        f"  Train: {len(train_records)} | Val: {len(val_records)} | Test: {len(test_records)} | Cross-Repo: {len(cross_repo_records)}"
+    )
+    print(
+        f"  Class balance: {pos_count} regressions ({manifest['imbalance_ratio'] * 100:.1f}%), {neg_count} stable."
+    )
     print(f"Manifest written to {out_dir / 'manifest.json'}")
 
 

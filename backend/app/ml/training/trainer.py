@@ -156,18 +156,20 @@ class ModelTrainer:
         size_metrics = self.compute_metrics(y_val, size_proba, size_pred)
 
         # 3. Logistic Regression
-        lr_pipeline = Pipeline([
-            ("scaler", StandardScaler()),
-            (
-                "clf",
-                LogisticRegression(
-                    C=0.5,
-                    class_weight="balanced",
-                    max_iter=1000,
-                    random_state=42,
+        lr_pipeline = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                (
+                    "clf",
+                    LogisticRegression(
+                        C=0.5,
+                        class_weight="balanced",
+                        max_iter=1000,
+                        random_state=42,
+                    ),
                 ),
-            ),
-        ])
+            ]
+        )
         lr_pipeline.fit(X_train, y_train)
         lr_proba = lr_pipeline.predict_proba(X_val)[:, 1]
         lr_pred = lr_pipeline.predict(X_val)

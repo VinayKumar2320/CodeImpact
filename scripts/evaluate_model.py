@@ -44,7 +44,11 @@ def compute_ece(y_true: np.ndarray, y_proba: np.ndarray, n_bins: int = 10) -> fl
 
     for i in range(n_bins):
         low, high = bin_limits[i], bin_limits[i + 1]
-        mask = (y_proba >= low) & (y_proba < high) if i < n_bins - 1 else (y_proba >= low) & (y_proba <= high)
+        mask = (
+            (y_proba >= low) & (y_proba < high)
+            if i < n_bins - 1
+            else (y_proba >= low) & (y_proba <= high)
+        )
         bin_count = np.sum(mask)
         if bin_count > 0:
             bin_acc = np.mean(y_true[mask])
@@ -69,7 +73,9 @@ def evaluate_split(model, records, split_name: str) -> dict:
     cm = confusion_matrix(y_true, y_pred).tolist()
 
     # Calibration curve
-    prob_true, prob_pred = calibration_curve(y_true, y_proba, n_bins=5, strategy="uniform")
+    prob_true, prob_pred = calibration_curve(
+        y_true, y_proba, n_bins=5, strategy="uniform"
+    )
 
     return {
         "split_name": split_name,
@@ -92,7 +98,9 @@ def evaluate_split(model, records, split_name: str) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Evaluate CodeImpact Risk Prediction Model")
+    parser = argparse.ArgumentParser(
+        description="Evaluate CodeImpact Risk Prediction Model"
+    )
     parser.add_argument(
         "--model-path",
         type=str,
@@ -117,7 +125,9 @@ def main() -> None:
     data_dir = Path(args.data_dir)
 
     if not model_file.exists():
-        logger.error(f"Model artifact not found at {model_file}. Run scripts/train_model.py first.")
+        logger.error(
+            f"Model artifact not found at {model_file}. Run scripts/train_model.py first."
+        )
         sys.exit(1)
 
     logger.info(f"Loading model bundle from {model_file}...")
@@ -137,13 +147,21 @@ def main() -> None:
 
     if test_file.exists():
         test_records = DatasetLoader.load_jsonl(test_file)
-        logger.info(f"Evaluating on chronological test set ({len(test_records)} records)...")
-        results["in_domain_test"] = evaluate_split(model, test_records, "in_domain_test")
+        logger.info(
+            f"Evaluating on chronological test set ({len(test_records)} records)..."
+        )
+        results["in_domain_test"] = evaluate_split(
+            model, test_records, "in_domain_test"
+        )
 
     if cross_file.exists():
         cross_records = DatasetLoader.load_jsonl(cross_file)
-        logger.info(f"Evaluating on cross-repository holdout set ({len(cross_records)} records)...")
-        results["cross_repo_test"] = evaluate_split(model, cross_records, "cross_repo_test")
+        logger.info(
+            f"Evaluating on cross-repository holdout set ({len(cross_records)} records)..."
+        )
+        results["cross_repo_test"] = evaluate_split(
+            model, cross_records, "cross_repo_test"
+        )
 
     out_file = Path(args.output_file)
     out_file.parent.mkdir(parents=True, exist_ok=True)
