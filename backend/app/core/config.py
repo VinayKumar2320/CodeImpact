@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "supersecretdevelopmentkeypleasereplaceinproduction"
 
     # Server Binding
+    PORT: int = 8000
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
     FRONTEND_PORT: int = 5173

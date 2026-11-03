@@ -8,74 +8,174 @@ import {
   Repository,
   RiskPrediction,
 } from '../types';
+import {
+  DEMO_ANALYSES,
+  DEMO_DEPENDENCY_GRAPHS,
+  DEMO_PLATFORM_METRICS,
+  DEMO_PULL_REQUESTS,
+  DEMO_RECOMMENDED_TESTS,
+  DEMO_REPOSITORIES,
+  DEMO_RISK_PREDICTIONS,
+} from './demoData';
 
-const API_BASE = '/api/v1';
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const API_BASE = `${BASE_URL}/api/v1`;
 
-async function handleResponse<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`API error (${res.status}): ${errorText || res.statusText}`);
+let activeDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
+
+export function isUsingDemoFallback(): boolean {
+  return activeDemoMode;
+}
+
+async function fetchWithFallback<T>(
+  endpoint: string,
+  fallback: () => T,
+  options?: RequestInit
+): Promise<T> {
+  if (import.meta.env.VITE_DEMO_MODE === 'true') {
+    activeDemoMode = true;
+    return fallback();
   }
-  return res.json() as Promise<T>;
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, options);
+    if (!res.ok) {
+      console.warn(`[CodeImpact] API returned ${res.status} for ${endpoint}. Falling back to demo data.`);
+      activeDemoMode = true;
+      return fallback();
+    }
+    activeDemoMode = false;
+    return (await res.json()) as T;
+  } catch (err) {
+    console.warn(`[CodeImpact] Backend unreachable at ${API_BASE}${endpoint} (${err}). Falling back to demo data.`);
+    activeDemoMode = true;
+    return fallback();
+  }
 }
 
 export const api = {
   // Repositories
   getRepositories: (): Promise<Repository[]> =>
-    fetch(`${API_BASE}/repositories`).then((r) => handleResponse<Repository[]>(r)),
+    fetchWithFallback('/repositories', () => DEMO_REPOSITORIES),
 
   createRepository: (fullName: string): Promise<Repository> =>
-    fetch(`${API_BASE}/repositories`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ full_name: fullName, default_branch: 'main' }),
-    }).then((r) => handleResponse<Repository>(r)),
-
-  // Pull Requests
-  getPullRequests: (repositoryId?: string): Promise<PullRequest[]> => {
-    const url = repositoryId
-      ? `${API_BASE}/pull-requests?repository_id=${encodeURIComponent(repositoryId)}`
-      : `${API_BASE}/pull-requests`;
-    return fetch(url).then((r) => handleResponse<PullRequest[]>(r));
-  },
-
-  getPullRequestById: (id: string): Promise<PullRequest> =>
-    fetch(`${API_BASE}/pull-requests/${encodeURIComponent(id)}`).then((r) =>
-      handleResponse<PullRequest>(r)
+    fetchWithFallback(
+      '/repositories',
+      () => {
+        const [owner, name] = fullName.split('/');
+        return {
+          id: `repo-${Date.now()}`,
+          full_name: fullName,
+          owner: owner || 'developer',
+          name: name || fullName,
+          default_branch: 'main',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      },
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: fullName, default_branch: 'main' }),
+      }
     ),
 
+  // Pull Requests
+  getPullRequests: (repositoryId?: string): Promise<PullRequest[]> =>
+    fetchWithFallback(
+      repositoryId
+        ? `/pull-requests?repository_id=${encodeURIComponent(repositoryId)}`
+        : '/pull-requests',
+      () =>
+        repositoryId
+          ? DEMO_PULL_REQUESTS.filter((pr) => pr.repository_id === repositoryId)
+          : DEMO_PULL_REQUESTS
+    ),
+
+  getPullRequestById: (id: string): Promise<PullRequest> =>
+    fetchWithFallback(`/pull-requests/${encodeURIComponent(id)}`, () => {
+      const match = DEMO_PULL_REQUESTS.find((p) => p.id === id);
+      if (match) return match;
+      return DEMO_PULL_REQUESTS[0];
+    }),
+
   triggerAnalysis: (prId: string): Promise<{ analysis_id: string; status: string }> =>
-    fetch(`${API_BASE}/pull-requests/${encodeURIComponent(prId)}/analyze`, {
-      method: 'POST',
-    }).then((r) => handleResponse<{ analysis_id: string; status: string }>(r)),
+    fetchWithFallback(
+      `/pull-requests/${encodeURIComponent(prId)}/analyze`,
+      () => ({
+        analysis_id: 'analysis-103',
+        status: 'QUEUED',
+      }),
+      { method: 'POST' }
+    ),
 
   // Analyses
   getAnalysis: (id: string): Promise<AnalysisOverview> =>
-    fetch(`${API_BASE}/analyses/${encodeURIComponent(id)}`).then((r) =>
-      handleResponse<AnalysisOverview>(r)
-    ),
+    fetchWithFallback(`/analyses/${encodeURIComponent(id)}`, () => {
+      return (
+        DEMO_ANALYSES[id] || {
+          id,
+          pull_request_id: 'pr-103',
+          commit_sha: 'c303333333333333333333333333333333333333',
+          status: 'COMPLETED',
+          analysis_version: '1.0.0',
+          execution_duration_ms: 450,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          risk_score: 0.27,
+          risk_tier: 'HIGH',
+        }
+      );
+    }),
 
   getAnalysisRisk: (id: string): Promise<RiskPrediction> =>
-    fetch(`${API_BASE}/analyses/${encodeURIComponent(id)}/risk`).then((r) =>
-      handleResponse<RiskPrediction>(r)
-    ),
+    fetchWithFallback(`/analyses/${encodeURIComponent(id)}/risk`, () => {
+      return (
+        DEMO_RISK_PREDICTIONS[id] ||
+        DEMO_RISK_PREDICTIONS['analysis-103']
+      );
+    }),
 
   getAnalysisDependencies: (id: string): Promise<DependencyGraph> =>
-    fetch(`${API_BASE}/analyses/${encodeURIComponent(id)}/dependencies`).then((r) =>
-      handleResponse<DependencyGraph>(r)
-    ),
+    fetchWithFallback(`/analyses/${encodeURIComponent(id)}/dependencies`, () => {
+      return (
+        DEMO_DEPENDENCY_GRAPHS[id] ||
+        DEMO_DEPENDENCY_GRAPHS['analysis-103']
+      );
+    }),
 
   getRecommendedTests: (id: string): Promise<RecommendedTestsPlan> =>
-    fetch(`${API_BASE}/analyses/${encodeURIComponent(id)}/recommended-tests`).then((r) =>
-      handleResponse<RecommendedTestsPlan>(r)
-    ),
+    fetchWithFallback(`/analyses/${encodeURIComponent(id)}/recommended-tests`, () => {
+      return (
+        DEMO_RECOMMENDED_TESTS[id] ||
+        DEMO_RECOMMENDED_TESTS['analysis-103']
+      );
+    }),
 
   getAnalysisReport: (id: string): Promise<AnalysisReport> =>
-    fetch(`${API_BASE}/analyses/${encodeURIComponent(id)}/report`).then((r) =>
-      handleResponse<AnalysisReport>(r)
-    ),
+    fetchWithFallback(`/analyses/${encodeURIComponent(id)}/report`, () => {
+      const risk = DEMO_RISK_PREDICTIONS[id] || DEMO_RISK_PREDICTIONS['analysis-103'];
+      const tests = DEMO_RECOMMENDED_TESTS[id] || DEMO_RECOMMENDED_TESTS['analysis-103'];
+      return {
+        analysis_id: id,
+        pull_request_id: 'pr-103',
+        commit_sha: 'c303333333333333333333333333333333333333',
+        status: 'COMPLETED',
+        risk_score: risk.risk_score,
+        risk_tier: risk.risk_tier,
+        summary_markdown: `### 🛡️ CodeImpact Predictive Risk Assessment: **${risk.risk_tier}** (${Math.round(risk.risk_score * 100)}%)\n\nRecommended **${tests.selected_tests_count}** of **${tests.total_suite_tests_count}** tests, saving **${tests.time_savings_percent}%** suite execution time.`,
+        risk,
+        tests,
+        dependency_graph_summary: {
+          total_nodes: 9,
+          total_edges: 10,
+          affected_nodes_count: 5,
+        },
+      };
+    }),
 
   // Platform Metrics
   getPlatformMetrics: (): Promise<PlatformMetrics> =>
-    fetch(`${API_BASE}/metrics`).then((r) => handleResponse<PlatformMetrics>(r)),
+    fetchWithFallback('/metrics', () => DEMO_PLATFORM_METRICS),
 };

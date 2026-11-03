@@ -87,6 +87,10 @@ jobs:
         working-directory: ./frontend
         run: npm ci || npm install
 
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test
+
       - name: Run TypeScript Type Check & Build
         working-directory: ./frontend
         run: npm run build

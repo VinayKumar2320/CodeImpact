@@ -18,15 +18,16 @@ export default function App() {
   const checkHealth = async () => {
     setHealthLoading(true);
     try {
-      const res = await fetch('/api/v1/health');
+      const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+      const res = await fetch(`${BASE_URL}/api/v1/health`);
       if (res.ok) {
         const data = await res.json();
         setHealthStatus(data);
       } else {
-        setHealthStatus({ status: 'degraded' });
+        setHealthStatus({ status: 'demo' });
       }
     } catch {
-      setHealthStatus({ status: 'offline' });
+      setHealthStatus({ status: 'demo' });
     } finally {
       setHealthLoading(false);
     }
@@ -110,6 +111,19 @@ export default function App() {
           </span>
         </div>
       </header>
+
+      {/* Demo Mode Banner */}
+      {healthStatus?.status === 'demo' && (
+        <div className="bg-sky-950/40 border-b border-sky-800/50 px-6 py-2 text-xs text-sky-300 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            <span>
+              <strong>Public Demonstration Mode</strong>: Exploring preloaded pull request scenarios across LOW, MEDIUM, HIGH, and CRITICAL risk tiers with real AST dependency models and SHAP factor explanations.
+            </span>
+          </div>
+          <span className="text-[10px] text-sky-400/80 font-mono hidden md:inline">Read-Only Recruiter Preview</span>
+        </div>
+      )}
 
       {/* Main Content Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6">

@@ -73,6 +73,7 @@ app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+    allow_origin_regex=r"^https?://.*(vercel\.app|netlify\.app|onrender\.com|localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,6 +88,13 @@ app.include_router(predictions.router, prefix=settings.API_V1_STR)
 app.include_router(tests.router, prefix=settings.API_V1_STR)
 app.include_router(metrics.router, prefix=settings.API_V1_STR)
 app.include_router(webhooks.router, prefix=settings.API_V1_STR)
+
+
+@app.get("/docs", include_in_schema=False)
+async def docs_redirect():
+    from fastapi.responses import RedirectResponse
+
+    return RedirectResponse(url=f"{settings.API_V1_STR}/docs")
 
 
 @app.get("/", include_in_schema=False)
