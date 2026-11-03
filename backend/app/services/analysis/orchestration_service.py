@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 from sqlalchemy import delete, select
@@ -36,6 +37,7 @@ class AnalysisOrchestrationService:
         base_files: dict[str, str],
         head_files: dict[str, str],
         coverage_data: dict[str, Any] | None = None,
+        feature_overrides: dict[str, float] | None = None,
         db: AsyncSession | None = None,
     ) -> dict[str, Any]:
         start_time = time.time()
@@ -48,7 +50,9 @@ class AnalysisOrchestrationService:
             head_files=head_files,
         )
 
-        tabular_features = static_result.get("features", {})
+        tabular_features = dict(static_result.get("features", {}))
+        if feature_overrides:
+            tabular_features.update(feature_overrides)
 
         # 2. Run Machine Learning Risk Prediction
         prediction_result: RiskPredictionResult = risk_predictor.predict(tabular_features)
@@ -57,7 +61,7 @@ class AnalysisOrchestrationService:
         parsed_diff = diff_parser.parse(diff_text)
         modified_diffs = parsed_diff.files
         changed_symbols = [
-            f"{f.file_path}:{item.get('name')}"
+            f"{f.file_path}:{item.get('name', item) if isinstance(item, dict) else item}"
             for f in modified_diffs
             for item in static_result.get("impact_summary", {}).get("modified_functions", [])
         ]
@@ -95,11 +99,32 @@ class AnalysisOrchestrationService:
                 seen_ids.add(c.test_identifier)
                 unique_candidates.append(c)
 
-        # Execute Optimizer (budget 60s)
+        # Include remaining unimpacted repository tests so optimizer can evaluate full suite time savings
+        for tf in known_test_files:
+            cand_id = f"{tf}::test_suite"
+            # If no test from this file was matched as directly impacted
+            if not any(c.file_path == tf for c in unique_candidates):
+                seen_ids.add(cand_id)
+                unique_candidates.append(
+                    TestCandidate(
+                        test_identifier=cand_id,
+                        file_path=tf,
+                        test_name=Path(tf).stem,
+                        estimated_duration_ms=450,
+                        evidence_level="EVIDENCE_DEPENDENCY_HEURISTIC",
+                        selection_reason="Repository baseline suite; unimpacted by current PR changes.",
+                    )
+                )
+
+        # Execute Optimizer (budget proportional to suite size, targeting ~50% savings under constraint)
+        total_duration_sec = sum(c.estimated_duration_ms for c in unique_candidates) / 1000.0
+        budget_sec = (
+            max(1.0, min(60.0, total_duration_sec * 0.45)) if total_duration_sec > 1.5 else 60.0
+        )
         test_plan: TestSelectionPlan = test_selection_optimizer.select_tests(
             candidates=unique_candidates,
             target_symbols=changed_symbols,
-            budget_seconds=60.0,
+            budget_seconds=budget_sec,
             risk_score=prediction_result.risk_score,
         )
 
