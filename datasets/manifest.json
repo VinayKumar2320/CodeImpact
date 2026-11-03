@@ -1,0 +1,22 @@
+{
+  "dataset_name": "CodeImpact-Historical-PR-v1",
+  "created_at": "2026-11-03T20:20:19.555301+00:00",
+  "total_records": 1200,
+  "split_counts": {
+    "train": 630,
+    "val": 135,
+    "test": 135,
+    "cross_repo_test": 300
+  },
+  "positive_count": 185,
+  "negative_count": 1015,
+  "imbalance_ratio": 0.1542,
+  "repositories": [
+    "tiangolo/fastapi",
+    "psf/requests",
+    "scikit-learn/scikit-learn",
+    "pallets/flask"
+  ],
+  "held_out_repository": "pallets/flask",
+  "leakage_audit": "Chronological partitions verified: max(train) < min(val) < min(test)"
+}
