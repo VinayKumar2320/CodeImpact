@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     GITHUB_WEBHOOK_SECRET: str = "development_webhook_secret_key"
     GITHUB_CLIENT_ID: str = ""
     GITHUB_CLIENT_SECRET: str = ""
+    GITHUB_API_BASE_URL: str = "https://api.github.com"
 
     # MLflow & Models
     MLFLOW_TRACKING_URI: str = "./mlruns"

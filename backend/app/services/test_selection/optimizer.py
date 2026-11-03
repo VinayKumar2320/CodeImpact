@@ -45,6 +45,7 @@ class TestRecommendationItem:
 
 @dataclass
 class TestSelectionPlan:
+    __test__ = False
     recommended_tests: list[TestRecommendationItem]
     total_suite_tests_count: int
     selected_tests_count: int
